@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Clara & Rish’s Anniversary Arcade",
+  title: "Glyra & Rishabh’s Anniversary Arcade",
   description: "A private date night made for two.",
   other: {
     "codex-preview": "development",
