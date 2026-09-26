@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, Crown, Eraser, Heart, Music2, PenLine, RotateCcw, Sparkles, Trophy, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast, Toaster } from "sonner";
-import content from "@/content/date-night.json";
+import content from "@/content/public-date-night.json";
 import type { AchievementId, Point, Role, RoomAction, RoomResponse, RoomState, Stage, Stroke } from "./room-types";
 
 const stages: Stage[] = ["lobby", "quiz", "draw", "memories", "finale", "ending"];
@@ -16,7 +17,8 @@ const emptyState: RoomState = { revision: 0, stage: "lobby", hostPresent: false,
 
 function credentials() {
   if (typeof window === "undefined") return { role: "guest" as Role, token: "" };
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search || sessionStorage.getItem("date-night-invite") || "");
+  if (window.location.search) sessionStorage.setItem("date-night-invite", window.location.search);
   const role: Role = params.has("host") ? "host" : "guest";
   return { role, token: params.get(role) ?? "" };
 }
@@ -41,30 +43,50 @@ export default function Home() {
   const [online, setOnline] = useState(true);
   const [announcement, setAnnouncement] = useState("Welcome to your date night.");
   const stageRef = useRef<HTMLElement>(null);
+  const latest = useRef(emptyState);
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  const accept = useCallback((data: RoomResponse) => { if (data.state.revision < latest.current.revision) return; latest.current = data.state; setState(data.state); setSecret(data.secret); }, []);
   useEffect(() => { const resolveCredentials = setTimeout(() => setCredentials(credentials()), 0); return () => clearTimeout(resolveCredentials); }, []);
   const refresh = useCallback(async () => {
-    if (!token) return;
+    if (!token) { setLoading(false); return; }
     try {
-      const res = await fetch(`/api/room?role=${role}&token=${encodeURIComponent(token)}`, { cache: "no-store" });
+      const res = await fetch(`/api/room?role=${role}&token=${encodeURIComponent(token)}`, { cache: "no-store", signal: AbortSignal.timeout(10000) });
       if (!res.ok) throw new Error();
       const data = await res.json() as RoomResponse;
-      setState(data.state); setSecret(data.secret); setOnline(true);
+      accept(data); setOnline(true);
     } catch { setOnline(false); } finally { setLoading(false); }
-  }, [role, token]);
-  const act = useCallback(async (action: RoomAction) => {
-    try {
-      const res = await fetch("/api/room", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ role, token, expectedRevision: state.revision, action }) });
-      const data = await res.json() as RoomResponse & { error?: string };
-      if (!res.ok) { if (data.state) setState(data.state); throw new Error(data.error ?? "Couldn’t save that."); }
-      setState(data.state); setSecret(data.secret); setOnline(true);
-      if (data.notice) { setAnnouncement(data.notice); toast.success(data.notice); }
-      return true;
-    } catch (error) { setOnline(false); toast.error(error instanceof Error ? error.message : "Couldn’t sync that yet."); return false; }
-  }, [role, state.revision, token]);
+  }, [role, token, accept]);
+  const act = useCallback((action: RoomAction): Promise<boolean> => {
+    const context = latest.current;
+    const run = async () => {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const now = latest.current;
+        if (action.type !== "arrive" && (now.stage !== context.stage || now.quizIndex !== context.quizIndex || now.drawRound !== context.drawRound || now.memoryIndex !== context.memoryIndex)) {
+          toast.info("The activity moved on. Your screen is up to date."); return false;
+        }
+        try {
+          const res = await fetch("/api/room", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ role, token, expectedRevision: now.revision, action }), signal: AbortSignal.timeout(10000) });
+          const data = await res.json() as RoomResponse & { error?: string };
+          if (data.state) accept(data);
+          setOnline(true);
+          if (res.status === 409) continue;
+          if (!res.ok) { toast.error(data.error ?? "Couldn’t save that."); return false; }
+          if (data.notice) { setAnnouncement(data.notice); toast.success(data.notice); }
+          return true;
+        } catch { setOnline(false); toast.error("Connection interrupted. Please try again."); return false; }
+      }
+      toast.error("The room is busy. Please try again."); return false;
+    };
+    const result = queue.current.then(run);
+    queue.current = result.catch(() => false);
+    return result;
+  }, [role, token, accept]);
   useEffect(() => { const initial = setTimeout(refresh, 0); const poll = setInterval(refresh, state.stage === "draw" ? 900 : 2400); return () => { clearTimeout(initial); clearInterval(poll); }; }, [refresh, state.stage]);
   useEffect(() => { stageRef.current?.focus(); const announce = setTimeout(() => setAnnouncement(`Now in ${labels[stages.indexOf(state.stage)]}.`), 0); return () => clearTimeout(announce); }, [state.stage]);
   const index = stages.indexOf(state.stage);
-  if (loading || !token) return <main className="loading"><Sparkles /><p>Lighting the candles…</p></main>;
+  if (!loading && !token) return <main className="loading"><Heart /><p>Open your host or guest invitation to join.</p><Link href="/scrapbook">Visit our scrapbook</Link></main>;
+  if (loading) return <main className="loading"><Sparkles /><p>Lighting the candles…</p></main>;
+  if (!online && state.revision === 0) return <main className="loading"><WifiOff /><p>We couldn’t open your room. Check your invitation and connection.</p><Button onClick={() => void refresh()}>Try again</Button></main>;
   return <main className="app-shell romantic">
     <div className="ambient" /><Celebration key={state.stage} stage={state.stage} />
     <p className="sr-only" aria-live="polite">{announcement}</p>
@@ -74,8 +96,8 @@ export default function Home() {
     <section className="stage-card" ref={stageRef} tabIndex={-1}>
       {state.stage === "lobby" && <Lobby role={role} state={state} act={act} />}
       {state.stage === "quiz" && <Quiz role={role} state={state} act={act} />}
-      {state.stage === "draw" && <Drawing role={role} state={state} act={act} />}
-      {state.stage === "memories" && <Memories role={role} state={state} act={act} />}
+      {state.stage === "draw" && <Drawing key={state.drawRound} role={role} state={state} act={act} />}
+      {state.stage === "memories" && <Memories key={state.memoryIndex} role={role} state={state} act={act} />}
       {state.stage === "finale" && <Finale role={role} state={state} secret={secret} act={act} />}
       {state.stage === "ending" && <Ending role={role} state={state} act={act} />}
     </section>
@@ -88,7 +110,7 @@ function HostAdvance({ role, onClick, children, disabled = false }: { role: Role
 function Lobby({ role, state, act }: { role: Role; state: RoomState; act: (action: RoomAction) => Promise<boolean> }) {
   useEffect(() => { if (!state[role === "host" ? "hostPresent" : "guestPresent"]) { const arrival = setTimeout(() => { void act({ type: "arrive" }); }, 0); return () => clearTimeout(arrival); } }, [act, role, state]);
   const both = state.hostPresent && state.guestPresent;
-  return <div className="split hero-stage"><div className="hero-copy"><Eyebrow>Three years, one more adventure</Eyebrow><h1>Tonight is ours.</h1><p className="lede">A little competition, a lot of remembering, and small surprises waiting along the way.</p><div className="presence"><Person name={content.couple.host} here={state.hostPresent} /><div className="gold-thread" /><Person name={content.couple.guest} here={state.guestPresent} /></div><div className="actions"><HostAdvance role={role} disabled={!both} onClick={() => void act({ type: "advanceLobby" })}>{both ? "Begin our night" : "Waiting for your favourite person"}</HostAdvance><a className="music-link" href="https://open.spotify.com/search/Taylor%20Swift%20Love%20Story" target="_blank" rel="noreferrer" aria-label="Open Love Story by Taylor Swift in Spotify"><Music2 />Play Love Story</a></div></div><div className="hero-art"><Image src="/anniversary-night.png" alt="Two warmly lit windows connected beneath a moonlit sky" fill priority sizes="(max-width: 760px) 100vw, 50vw" /><span className="tape">Open when we’re both here</span></div></div>;
+  return <div className="split hero-stage"><div className="hero-copy"><Eyebrow>Three years, one more adventure</Eyebrow><h1>Tonight is ours.</h1><p className="lede">A little competition, a lot of remembering, and small surprises waiting along the way.</p><div className="presence"><Person name={content.couple.host} here={state.hostPresent} /><div className="gold-thread" /><Person name={content.couple.guest} here={state.guestPresent} /></div><div className="actions"><HostAdvance role={role} disabled={!both} onClick={() => void act({ type: "advanceLobby" })}>{both ? "Begin our night" : "Waiting for your favourite person"}</HostAdvance><a className="music-link" href="https://open.spotify.com/search/Taylor%20Swift%20Love%20Story" target="_blank" rel="noreferrer" aria-label="Open Love Story by Taylor Swift in Spotify"><Music2 />Play Love Story</a><Link className="music-link scrapbook-link" href="/scrapbook"><Heart />Our scrapbook</Link></div></div><div className="hero-art"><Image src="/anniversary-night.png" alt="Two warmly lit windows connected beneath a moonlit sky" fill priority sizes="(max-width: 760px) 100vw, 50vw" /><span className="tape">Open when we’re both here</span></div></div>;
 }
 function Person({ name, here }: { name: string; here: boolean }) { return <div className={here ? "person here" : "person"}><span>{name[0]}</span><div><strong>{name}</strong><small>{here ? "is here" : "not here yet"}</small></div></div>; }
 function Quiz({ role, state, act }: { role: Role; state: RoomState; act: (action: RoomAction) => Promise<boolean> }) {
@@ -100,9 +122,9 @@ function Drawing({ role, state, act }: { role: Role; state: RoomState; act: (act
   const prompt = content.drawPrompts[state.drawRound], isDrawer = role === state.drawer;
   const redraw = useCallback(() => { const c = canvas.current; if (!c) return; const ctx = c.getContext("2d"); if (!ctx) return; ctx.clearRect(0, 0, c.width, c.height); ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.lineJoin = "round"; pending.current = pending.current.filter((pendingStroke) => !state.strokes.some((savedStroke) => savedStroke.points.length === pendingStroke.points.length && savedStroke.points[0]?.x === pendingStroke.points[0]?.x && savedStroke.points[0]?.y === pendingStroke.points[0]?.y && savedStroke.points.at(-1)?.x === pendingStroke.points.at(-1)?.x && savedStroke.points.at(-1)?.y === pendingStroke.points.at(-1)?.y)); const activeStroke = drawing.current && current.current.length > 1 ? [{ points: current.current, color: "#f0b75e" }] : []; [...state.strokes, ...pending.current, ...activeStroke].forEach((stroke) => { ctx.strokeStyle = stroke.color; ctx.beginPath(); stroke.points.forEach((point, i) => i ? ctx.lineTo(point.x * c.width, point.y * c.height) : ctx.moveTo(point.x * c.width, point.y * c.height)); ctx.stroke(); }); }, [state.strokes]);
   useEffect(redraw, [redraw]);
-  const point = (event: React.PointerEvent) => { const rect = event.currentTarget.getBoundingClientRect(); return { x: (event.clientX - rect.left) / rect.width, y: (event.clientY - rect.top) / rect.height }; };
-  const up = () => { if (!drawing.current) return; drawing.current = false; if (current.current.length > 1) { const stroke = { points: current.current, color: "#f0b75e" }; pending.current.push(stroke); void act({ type: "addStroke", stroke }); } };
-  return <div className="draw-stage"><div className="draw-head"><div><Eyebrow>Sketchbook · Round {state.drawRound + 1} of 4</Eyebrow><h2>{isDrawer ? prompt : "What are they drawing?"}</h2><p>{isDrawer ? "Draw the prompt—no letters or numbers." : "Say it as soon as you know it."}</p></div><div className="score"><Crown /><strong>{total(state)}</strong><small>love points</small></div></div><div className="canvas-wrap"><canvas ref={canvas} width={1000} height={620} onPointerDown={(event) => { if (!isDrawer) return; drawing.current = true; current.current = [point(event)]; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (!drawing.current) return; const next = point(event); const previous = current.current[current.current.length - 1]; current.current.push(next); const canvasElement = canvas.current; const context = canvasElement?.getContext("2d"); if (canvasElement && context) { context.strokeStyle = "#f0b75e"; context.lineWidth = 5; context.lineCap = "round"; context.beginPath(); context.moveTo(previous.x * canvasElement.width, previous.y * canvasElement.height); context.lineTo(next.x * canvasElement.width, next.y * canvasElement.height); context.stroke(); } }} onPointerUp={up} onPointerCancel={up} aria-label={isDrawer ? "Shared drawing canvas. Draw with your pointer." : "Shared drawing canvas showing your partner's drawing."} /> <span className="canvas-label"><PenLine />{isDrawer ? "Your canvas" : "Live from their imagination"}</span>{isDrawer && <button className="clear" onClick={() => void act({ type: "clearDrawing" })} aria-label="Clear the drawing"><Eraser />Clear</button>}</div>{!isDrawer && <div className="guess-row"><input value={guess} onChange={(event) => setGuess(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void act({ type: "submitGuess", guess }).then(() => setGuess(""))} placeholder="Type your guess…" aria-label="Your drawing guess" /><Button onClick={() => void act({ type: "submitGuess", guess }).then(() => setGuess(""))}>Send guess</Button></div>}{state.guesses.length > 0 && <div className="guess-cloud" aria-label="Recent guesses">{state.guesses.slice(-4).map((value, i) => <span key={`${value}-${i}`}>{value}</span>)}</div>}<HostAdvance role={role} onClick={() => void act({ type: "advanceDrawing" })}>{state.drawRound < 3 ? "Next drawing" : "Open the memory vault"}</HostAdvance></div>;
+  const point = (event: React.PointerEvent) => { const rect = event.currentTarget.getBoundingClientRect(); return { x: Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)), y: Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height)) }; };
+  const up = () => { if (!drawing.current) return; drawing.current = false; if (current.current.length > 1) { const points = current.current.filter((_, index, all) => index % Math.max(1, Math.ceil(all.length / 999)) === 0); const stroke = { points, color: "#f0b75e" }; pending.current.push(stroke); void act({ type: "addStroke", stroke }).then((saved) => { if (!saved) { pending.current = pending.current.filter((item) => item !== stroke); } }); } };
+  return <div className="draw-stage"><div className="draw-head"><div><Eyebrow>Sketchbook · Round {state.drawRound + 1} of 4</Eyebrow><h2>{isDrawer ? prompt : "What are they drawing?"}</h2><p>{isDrawer ? "Draw the prompt—no letters or numbers." : "Say it as soon as you know it."}</p></div><div className="score"><Crown /><strong>{total(state)}</strong><small>love points</small></div></div><div className="canvas-wrap"><canvas ref={canvas} width={1000} height={620} onPointerDown={(event) => { if (!isDrawer) return; drawing.current = true; current.current = [point(event)]; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (!drawing.current) return; const next = point(event); const previous = current.current[current.current.length - 1]; current.current.push(next); const canvasElement = canvas.current; const context = canvasElement?.getContext("2d"); if (canvasElement && context) { context.strokeStyle = "#f0b75e"; context.lineWidth = 5; context.lineCap = "round"; context.beginPath(); context.moveTo(previous.x * canvasElement.width, previous.y * canvasElement.height); context.lineTo(next.x * canvasElement.width, next.y * canvasElement.height); context.stroke(); } }} onPointerUp={up} onPointerCancel={up} aria-label={isDrawer ? "Shared drawing canvas. Draw with your pointer." : "Shared drawing canvas showing your partner's drawing."} /> <span className="canvas-label"><PenLine />{isDrawer ? "Your canvas" : "Live from their imagination"}</span>{isDrawer && <button className="clear" onClick={() => { pending.current = []; current.current = []; drawing.current = false; void act({ type: "clearDrawing" }); }} aria-label="Clear the drawing"><Eraser />Clear</button>}</div>{!isDrawer && <div className="guess-row"><input value={guess} onChange={(event) => setGuess(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void act({ type: "submitGuess", guess }).then(() => setGuess(""))} placeholder="Type your guess…" aria-label="Your drawing guess" /><Button onClick={() => void act({ type: "submitGuess", guess }).then(() => setGuess(""))}>Send guess</Button></div>}{state.guesses.length > 0 && <div className="guess-cloud" aria-label="Recent guesses">{state.guesses.slice(-4).map((value, i) => <span key={`${value}-${i}`}>{value}</span>)}</div>}<HostAdvance role={role} onClick={() => void act({ type: "advanceDrawing" })}>{state.drawRound < 3 ? "Next drawing" : "Open the memory vault"}</HostAdvance></div>;
 }
 function Memories({ role, state, act }: { role: Role; state: RoomState; act: (action: RoomAction) => Promise<boolean> }) {
   const memory = content.memories[state.memoryIndex], notes = state.memoryNotes[String(state.memoryIndex)] ?? {}, mine = notes[role], other = notes[role === "host" ? "guest" : "host"], [note, setNote] = useState("");

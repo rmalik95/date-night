@@ -6,6 +6,9 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "predev": "node scripts/sync-public-content.mjs",
+    "prebuild": "node scripts/sync-public-content.mjs",
+    "test": "node --test scripts/review-room.test.mjs",
     "install:ci": "node scripts/install-ci.mjs",
     "dev": "node scripts/run-framework.mjs dev",
     "build": "node scripts/run-framework.mjs build",
