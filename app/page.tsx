@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, Crown, Eraser, Heart, Music2, PenLine, RotateCcw, Sparkles, Trophy, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -84,7 +83,7 @@ export default function Home() {
   useEffect(() => { const initial = setTimeout(refresh, 0); const poll = setInterval(refresh, state.stage === "draw" ? 900 : 2400); return () => { clearTimeout(initial); clearInterval(poll); }; }, [refresh, state.stage]);
   useEffect(() => { stageRef.current?.focus(); const announce = setTimeout(() => setAnnouncement(`Now in ${labels[stages.indexOf(state.stage)]}.`), 0); return () => clearTimeout(announce); }, [state.stage]);
   const index = stages.indexOf(state.stage);
-  if (!loading && !token) return <main className="loading"><Heart /><p>Open your host or guest invitation to join.</p><Link href="/scrapbook">Visit our scrapbook</Link></main>;
+  if (!loading && !token) return <main className="loading"><Heart /><p>Open your host or guest invitation to join.</p><a href="/scrapbook">Visit our scrapbook</a></main>;
   if (loading) return <main className="loading"><Sparkles /><p>Lighting the candles…</p></main>;
   if (!online && state.revision === 0) return <main className="loading"><WifiOff /><p>We couldn’t open your room. Check your invitation and connection.</p><Button onClick={() => void refresh()}>Try again</Button></main>;
   return <main className="app-shell romantic">
@@ -110,7 +109,7 @@ function HostAdvance({ role, onClick, children, disabled = false }: { role: Role
 function Lobby({ role, state, act }: { role: Role; state: RoomState; act: (action: RoomAction) => Promise<boolean> }) {
   useEffect(() => { if (!state[role === "host" ? "hostPresent" : "guestPresent"]) { const arrival = setTimeout(() => { void act({ type: "arrive" }); }, 0); return () => clearTimeout(arrival); } }, [act, role, state]);
   const both = state.hostPresent && state.guestPresent;
-  return <div className="split hero-stage"><div className="hero-copy"><Eyebrow>Three years, one more adventure</Eyebrow><h1>Tonight is ours.</h1><p className="lede">A little competition, a lot of remembering, and small surprises waiting along the way.</p><div className="presence"><Person name={content.couple.host} here={state.hostPresent} /><div className="gold-thread" /><Person name={content.couple.guest} here={state.guestPresent} /></div><div className="actions"><HostAdvance role={role} disabled={!both} onClick={() => void act({ type: "advanceLobby" })}>{both ? "Begin our night" : "Waiting for your favourite person"}</HostAdvance><a className="music-link" href="https://open.spotify.com/search/Taylor%20Swift%20Love%20Story" target="_blank" rel="noreferrer" aria-label="Open Love Story by Taylor Swift in Spotify"><Music2 />Play Love Story</a><Link className="music-link scrapbook-link" href="/scrapbook"><Heart />Our scrapbook</Link></div></div><div className="hero-art"><Image src="/anniversary-night.png" alt="Two warmly lit windows connected beneath a moonlit sky" fill priority sizes="(max-width: 760px) 100vw, 50vw" /><span className="tape">Open when we’re both here</span></div></div>;
+  return <div className="split hero-stage"><div className="hero-copy"><Eyebrow>Three years, one more adventure</Eyebrow><h1>Tonight is ours.</h1><p className="lede">A little competition, a lot of remembering, and small surprises waiting along the way.</p><div className="presence"><Person name={content.couple.host} here={state.hostPresent} /><div className="gold-thread" /><Person name={content.couple.guest} here={state.guestPresent} /></div><div className="actions"><HostAdvance role={role} disabled={!both} onClick={() => void act({ type: "advanceLobby" })}>{both ? "Begin our night" : "Waiting for your favourite person"}</HostAdvance><a className="music-link" href="https://open.spotify.com/search/Taylor%20Swift%20Love%20Story" target="_blank" rel="noreferrer" aria-label="Open Love Story by Taylor Swift in Spotify"><Music2 />Play Love Story</a><a className="music-link scrapbook-link" href="/scrapbook"><Heart />Our scrapbook</a></div></div><div className="hero-art"><Image src="/anniversary-night.png" alt="Two warmly lit windows connected beneath a moonlit sky" fill priority sizes="(max-width: 760px) 100vw, 50vw" /><span className="tape">Open when we’re both here</span></div></div>;
 }
 function Person({ name, here }: { name: string; here: boolean }) { return <div className={here ? "person here" : "person"}><span>{name[0]}</span><div><strong>{name}</strong><small>{here ? "is here" : "not here yet"}</small></div></div>; }
 function Quiz({ role, state, act }: { role: Role; state: RoomState; act: (action: RoomAction) => Promise<boolean> }) {
