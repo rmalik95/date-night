@@ -1,6 +1,17 @@
 {
   "couple": { "host": "Rishabh", "guest": "Glyra", "anniversary": "Three years of us" },
   "playlistUrl": "https://open.spotify.com/search/romantic%20date%20night",
+  "achievements": {
+    "earlyBird": { "title": "Early Bird", "description": "The first heart through the door." },
+    "quizMaster": { "title": "Quiz Master", "description": "Three beautifully matched answers." },
+    "artisticSoul": { "title": "Artistic Soul", "description": "A shared sketch brought to life." },
+    "memoryPalace": { "title": "Memory Palace", "description": "Three memories captured together." }
+  },
+  "surprises": {
+    "quiz": { "title": "First little surprise", "message": "You know each other in all the ways that count. Keep that glow going." },
+    "draw": { "title": "A note from the sketchbook", "message": "Even the wobbliest lines become beautiful when you make them together." },
+    "memory": { "title": "The memory vault opens", "message": "The best part is that there is still so much more of us to remember." }
+  },
   "quiz": [
     { "question": "Who said “I love you” first?", "options": ["Rishabh", "Glyra", "It happened at the same time"] },
     { "question": "Which kind of escape feels most like us?", "options": ["A tiny cabin", "A city weekend", "Somewhere by the sea"] },
