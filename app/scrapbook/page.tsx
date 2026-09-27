@@ -2,12 +2,14 @@ import Link from "next/link";
 import { ArrowLeft, Camera, Heart, Sparkles } from "lucide-react";
 import content from "@/content/public-date-night.json";
 
-export default function ScrapbookPage() {
+export default function ScrapbookPage({ searchParams }: { searchParams?: { role?: string } }) {
+  const role = searchParams?.role === "host" || searchParams?.role === "guest" ? searchParams.role : null;
+  const backHref = role ? `/${role}` : "/";
   return (
     <main className="scrapbook-page">
       <div className="scrapbook-glow" />
       <header className="scrapbook-header">
-        <Link className="scrapbook-back" href="/">
+        <Link className="scrapbook-back" href={backHref}>
           <ArrowLeft /> Back to our night
         </Link>
         <span className="scrapbook-mark" aria-label="Glyra and Rishabh">G<span>&</span>R</span>
