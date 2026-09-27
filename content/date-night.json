@@ -37,42 +37,24 @@
       "message": "The best part is that there is still so much more of us to remember."
     }
   },
-  "scrapbook": [
-    {
-      "date": "The beginning",
-      "title": "A screen between us",
-      "caption": "Those FaceTime calls that made the distance feel a little smaller.",
-      "label": "Add a favourite FaceTime screenshot",
-      "tone": "rose"
-    },
-    {
-      "date": "First chance",
-      "title": "Finally, in the same place",
-      "caption": "The moment the countdown ended and a real hug began.",
-      "label": "Add a first-meeting photo",
-      "tone": "gold"
-    },
-    {
-      "date": "Miles for us",
-      "title": "Every flight was worth it",
-      "caption": "Boarding passes, airport reunions, and the feeling of seeing each other again.",
-      "label": "Add an airport or travel photo",
-      "tone": "sky"
-    },
-    {
-      "date": "Little adventures",
-      "title": "Making ordinary days ours",
-      "caption": "A collection of the walks, meals, laughs, and tiny moments that became everything.",
-      "label": "Add a favourite date photo",
-      "tone": "lilac"
-    },
-    {
-      "date": "Right now",
-      "title": "Still choosing us",
-      "caption": "All the chapters so far—and every excuse to make another memory together.",
-      "label": "Add a recent photo together",
-      "tone": "rose"
-    }
+  "memoryLane": [
+    { "title": "Celebrating six months on FaceTime", "photos": ["/memory-lane/1-facetime-celebrating-6-months--cd36cf7f-77b9-40cb-a827-fffed6eea4aa-1-102-o-jpeg-.jpg", "/memory-lane/1-facetime-celebrating-6-months--a9bceebe-8866-49e8-9852-00ef6531c732-heic-.jpg"] },
+    { "title": "Our first meeting", "photos": ["/memory-lane/2-first-meet--15465b22-e06f-4c5d-96d9-153fd1131b70-1-102-o-jpeg-.jpg", "/memory-lane/2-first-meet--472de397-41e8-4bad-b446-b979675a1ae1-1-102-a-jpeg-.jpg", "/memory-lane/2-first-meet--33720114-ffb7-499a-9e21-815370a6d81a-1-102-o-jpeg-.jpg"] },
+    { "title": "Our second meeting in Turkey", "photos": ["/memory-lane/3-second-meet-turkey--6d181163-dfc4-4c46-912f-c9fbad6b275c-1-102-o-jpeg-.jpg", "/memory-lane/3-second-meet-turkey--af4e7341-8c71-4a93-a4dc-a06c4856c0e3-1-102-o-jpeg-.jpg"] },
+    { "title": "Your first homecoming to the UK", "photos": ["/memory-lane/4a-your-first-hoemcoming-to-uk--img-3766-heic-.jpg", "/memory-lane/4a-your-first-hoemcoming-to-uk--img-6877-heic-.jpg"] },
+    { "title": "Our first Christmas together", "photos": ["/memory-lane/4b-our-first-christmas-together--img-7161-heic-.jpg", "/memory-lane/4b-our-first-christmas-together--img-7305-heic-.jpg"] },
+    { "title": "Our first Valentine’s Day in person", "photos": ["/memory-lane/5-our-first-valentine-in-person--img-8852-heic-.jpg"] },
+    { "title": "Another flight to Budapest", "photos": ["/memory-lane/6-another-flight-to-budapest--img-3484-jpg-.jpg", "/memory-lane/6-another-flight-to-budapest--img-3399-heic-.jpg", "/memory-lane/6-another-flight-to-budapest--img-3349-heic-.jpg"] },
+    { "title": "Celebrating your birthday together", "photos": ["/memory-lane/7-celebrating-your-birtday-together--img-5364-heic-.jpg", "/memory-lane/7-celebrating-your-birtday-together--img-5726-heic-.jpg", "/memory-lane/7-celebrating-your-birtday-together--img-7332-heic-.jpg", "/memory-lane/7-celebrating-your-birtday-together--img-7038-heic-.jpg"] },
+    { "title": "Another flight to the UK", "photos": ["/memory-lane/8-another-flight-to-uk--img-2326-heic-.jpg", "/memory-lane/8-another-flight-to-uk--img-0139-heic-.jpg", "/memory-lane/8-another-flight-to-uk--img-0797-heic-.jpg"] },
+    { "title": "Cooking for Christmas together", "photos": ["/memory-lane/9-cooking-for-christmas-together--img-9413-heic-.jpg", "/memory-lane/9-cooking-for-christmas-together--img-9496-heic-.jpg"] },
+    { "title": "Let’s go to London", "photos": ["/memory-lane/10-less-go-to-london--img-8994-heic-.jpg", "/memory-lane/10-less-go-to-london--img-7859-heic-.jpg"] },
+    { "title": "Our second New Year together", "photos": ["/memory-lane/11-our-second-new-year-together--img-9923-heic-.jpg"] },
+    { "title": "The day you said yes", "photos": ["/memory-lane/day-u-said-yes-happesit-day-of-my-life--img-4926-heic-.jpg", "/memory-lane/day-u-said-yes-happesit-day-of-my-life--img-5075-heic-.jpg"] },
+    { "title": "Do you remember what happened on this day?", "photos": ["/memory-lane/do-you-remember-what-happened-on-this-day--img-6309-heic-.jpg", "/memory-lane/do-you-remember-what-happened-on-this-day--img-6302-heic-.jpg"] },
+    { "title": "The last time we saw each other", "photos": ["/memory-lane/last-time-we-saw-each-other--img-6784-heic-.jpg"] },
+    { "title": "Proof you’ve been to the Sunday market", "photos": ["/memory-lane/proof-that-u-have-been-to-the-sunday-market--fxn-2026-03-01-143948ab7c214badf8-jpg-.jpg"] },
+    { "title": "Us on a road trip together", "photos": ["/memory-lane/us-going-on-a-roadtrip-together--20250215-143750-jpg-.jpg"] }
   ],
   "quiz": [
     {
@@ -94,9 +76,9 @@
     {
       "question": "Our unofficial love language is…",
       "options": [
-        "Sending ridiculous memes",
         "Food, always food",
-        "Long unhurried calls"
+        "Long FaceTime calls",
+        "Annoying each other"
       ]
     },
     {
@@ -110,9 +92,9 @@
     {
       "question": "Pick the soundtrack to our relationship.",
       "options": [
-        "Soft and cinematic",
+        "Jazz",
         "A chaotic singalong",
-        "One perfect slow song"
+        "Taylor Swift"
       ]
     },
     {
@@ -128,15 +110,15 @@
       "options": [
         "The longest hug",
         "Finding something delicious",
-        "Talking all the way home"
+        "Chug chug a a"
       ]
     },
     {
       "question": "What makes the distance feel smaller?",
       "options": [
-        "A sleepy FaceTime call",
+        "Sleepy FaceTime",
         "Planning our next visit",
-        "A little message out of nowhere"
+        "Date nights and knowing you’re there for me"
       ]
     }
   ],
@@ -153,41 +135,38 @@
   "memories": [
     {
       "title": "The very beginning",
-      "caption": "Replace with your first photo together",
+      "image": "/remember/photo-1.jpg",
       "story": "The moment before either of you knew just how much this would matter.",
       "prompt": "What tiny detail do you remember that never made it into the photo?"
     },
     {
       "title": "The laugh we still talk about",
-      "caption": "Replace with your funniest shared memory",
+      "image": "/remember/photo-2.jpg",
       "story": "Every great relationship needs a story that gets funnier every time it is retold.",
       "prompt": "Which part of this day would you replay for five minutes?"
     },
     {
       "title": "A favourite ordinary day",
-      "caption": "Replace with an everyday favourite",
+      "image": "/remember/photo-3.jpg",
       "story": "Not every important memory announces itself. Some simply feel like home.",
       "prompt": "What ordinary ritual of ours do you never want to lose?"
     },
     {
       "title": "An adventure worth repeating",
-      "caption": "Replace with a trip or spontaneous date",
+      "image": "/remember/photo-4.jpg",
       "story": "A wrong turn, a good view, and the right person beside you.",
       "prompt": "Where should our next unplanned adventure take us?"
     },
     {
       "title": "Us, right now",
-      "caption": "Replace with a recent photo",
+      "image": "/remember/photo-5.jpg",
       "story": "Three years later: more stories, more tenderness, and so much still to discover.",
       "prompt": "What are you proudest of us for this year?"
     }
   ],
-  "letter": "Glyra, three years with you have made ordinary days brighter and difficult days gentler. I love the life we are building in all its small, funny, imperfect details. Thank you for choosing me, challenging me, and making me laugh when I least expect it. I would choose you at the beginning of every story—and I choose you now. Happy anniversary, my love.",
-  "futureDate": {
-    "title": "A candlelit dinner, then the stars",
-    "description": "I’ve planned an evening with your favourite food, a slow walk, and somewhere quiet where we can look up and dream about year four.",
-    "when": "Saturday · 6:30 PM",
-    "where": "Your favourite restaurant",
-    "bring": "A warm layer + your best stories"
-  }
+  "letter": "Glyra, three years with you have made ordinary days brighter and difficult days gentler. I love the life we are building in all its small, funny, imperfect details. Thank you for choosing me, challenging me, and making me laugh when I least expect it. I would choose you at the beginning of every story and I choose you now. Happy anniversary, my love.",
+  "futureDates": [
+    { "title": "Philippines", "when": "TBC as everything is tight :D but we’ll find time.", "where": "Fine dining", "bring": "Your best stories and your warm smile" },
+    { "title": "Hong Kong", "when": "Saturday, 24th October", "where": "A Hong Kong classic street food date", "bring": "Good shoes for walking" }
+  ]
 }

@@ -54,6 +54,6 @@ export type RoomAction =
 
 export type RoomResponse = {
   state: RoomState;
-  secret?: { letter: string; date: { title: string; description: string; when: string; where: string; bring: string } };
+  secret?: { letter: string; dates: { title: string; when: string; where: string; bring: string }[] };
   notice?: string;
 };
