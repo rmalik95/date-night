@@ -5,7 +5,7 @@ import content from "@/content/public-date-night.json";
 
 export default function MemoryLanePage({ searchParams }: { searchParams?: { role?: string } }) {
   const role = searchParams?.role === "host" || searchParams?.role === "guest" ? searchParams.role : null;
-  const backHref = role ? `/${role}` : "/";
+  const backHref = role === "host" ? "/?host=rishabh-host-3years" : role === "guest" ? "/?guest=glyra-guest-3years" : "/";
   return (
     <main className="memory-lane-page">
       <div className="memory-lane-glow" />
@@ -26,6 +26,9 @@ export default function MemoryLanePage({ searchParams }: { searchParams?: { role
           </section>
         ))}
       </div>
+      <footer className="memory-lane-footer">
+        <Link className="memory-lane-return" href={backHref}>Back to our night <ArrowLeft /></Link>
+      </footer>
     </main>
   );
 }
