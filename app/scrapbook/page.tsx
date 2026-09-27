@@ -1,16 +1,21 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Home } from "lucide-react";
 import content from "@/content/public-date-night.json";
 
-export default function MemoryLanePage({ searchParams }: { searchParams?: { role?: string } }) {
-  const role = searchParams?.role === "host" || searchParams?.role === "guest" ? searchParams.role : null;
+export default function MemoryLanePage() {
+  const roleParam = useSearchParams().get("role");
+  const role = roleParam === "host" || roleParam === "guest" ? roleParam : null;
   const backHref = role === "host" ? "/?host=rishabh-host-3years" : role === "guest" ? "/?guest=glyra-guest-3years" : "/";
+  const returnToNight = () => { window.location.assign(backHref); };
   return (
     <main className="memory-lane-page">
       <div className="memory-lane-glow" />
       <header className="memory-lane-header">
-        <Link className="memory-lane-back" href={backHref}><ArrowLeft /> Back to our night</Link>
+        <button className="memory-lane-back" type="button" onClick={returnToNight}><ArrowLeft /> Back to our night</button>
         <span className="memory-lane-mark" aria-label="Glyra and Rishabh">G<span>&</span>R</span>
       </header>
       <section className="memory-lane-intro">
@@ -27,7 +32,8 @@ export default function MemoryLanePage({ searchParams }: { searchParams?: { role
         ))}
       </div>
       <footer className="memory-lane-footer">
-        <Link className="memory-lane-return" href={backHref}>Back to our night <ArrowLeft /></Link>
+        <button className="memory-lane-return" type="button" onClick={returnToNight}>Back to our night <ArrowLeft /></button>
+        <Link className="memory-lane-home" href="/"><Home /> Home</Link>
       </footer>
     </main>
   );

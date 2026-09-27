@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, Crown, Eraser, Heart, Music2, PenLine, RotateCcw, Sparkles, Trophy, Wifi, WifiOff } from "lucide-react";
+import { ArrowRight, Check, Crown, Download, Eraser, Heart, Home, Music2, PenLine, RotateCcw, Sparkles, Trophy, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast, Toaster } from "sonner";
@@ -26,6 +26,19 @@ function Celebration({ stage }: { stage: Stage }) {
   return <div className="stage-celebration" aria-hidden="true">{bits.map((bit, i) => <span key={`${stage}-${i}`} style={{ "--i": i } as React.CSSProperties}>{stage === "ending" && i % 2 ? "♥" : bit}</span>)}</div>;
 }
 function total(state: RoomState) { return state.lovePoints.host + state.lovePoints.guest; }
+function cleanPdfText(value: string) { return value.normalize("NFKD").replace(/[^\x20-\x7E]/g, "'").replace(/[()\\]/g, "\\$&"); }
+function wrapPdfLine(value: string, width = 78) { const words = cleanPdfText(value).split(/\s+/); const lines: string[] = []; let line = ""; for (const word of words) { if (`${line} ${word}`.trim().length > width && line) { lines.push(line); line = word; } else line = `${line} ${word}`.trim(); } if (line) lines.push(line); return lines; }
+function downloadAnswers(state: RoomState) {
+  const lines = ["Glyra & Rishabh's Anniversary Arcade", "Our answers", ""];
+  content.quiz.forEach((quiz, index) => { const answers = state.answers[String(index)] ?? {}; lines.push(...wrapPdfLine(`${index + 1}. ${quiz.question}`), `Rishabh: ${answers.host ?? "No answer saved"}`, `Glyra: ${answers.guest ?? "No answer saved"}`, ""); });
+  lines.push("Memories", "");
+  content.memories.forEach((memory, index) => { const notes = state.memoryNotes[String(index)] ?? {}; lines.push(...wrapPdfLine(`${index + 1}. ${memory.title}`), `Rishabh: ${notes.host ?? "No memory saved"}`, `Glyra: ${notes.guest ?? "No memory saved"}`, ""); });
+  const pages = Array.from({ length: Math.max(1, Math.ceil(lines.length / 44)) }, (_, index) => lines.slice(index * 44, (index + 1) * 44));
+  const objects: string[] = ["<< /Type /Catalog /Pages 2 0 R >>", `<< /Type /Pages /Kids [${pages.map((_, index) => `${3 + index * 2} 0 R`).join(" ")}] /Count ${pages.length} >>`];
+  pages.forEach((page, index) => { const contentObject = 4 + index * 2; const stream = `BT\n/F1 11 Tf\n14 TL\n50 780 Td\n${page.map((line) => `(${cleanPdfText(line)}) Tj\nT*`).join("\n")}\nET`; objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents ${contentObject} 0 R >>`, `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`); });
+  let pdf = "%PDF-1.4\n"; const offsets = [0]; objects.forEach((object, index) => { offsets.push(pdf.length); pdf += `${index + 1} 0 obj\n${object}\nendobj\n`; }); const xref = pdf.length; pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.slice(1).map((offset) => `${String(offset).padStart(10, "0")} 00000 n `).join("\n")}\ntrailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  const url = URL.createObjectURL(new Blob([pdf], { type: "application/pdf" })); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "our-anniversary-answers.pdf"; anchor.click(); URL.revokeObjectURL(url);
+}
 function SurpriseBoxes({ state }: { state: RoomState }) {
   return <aside className="surprise-boxes" aria-label="Evening surprises">{(["quiz", "draw", "memory"] as const).map((id) => <div className={state.surprises[id] ? "surprise open" : "surprise"} key={id}><span>{state.surprises[id] ? "✦" : "?"}</span><div><small>{content.surprises[id].title}</small><p>{state.surprises[id] ? content.surprises[id].message : "Keep making memories to unlock this."}</p></div></div>)}</aside>;
 }
@@ -135,5 +148,5 @@ function Finale({ role, state, secret, act }: { role: Role; state: RoomState; se
 }
 function Ending({ role, state, act }: { role: Role; state: RoomState; act: (action: RoomAction) => Promise<boolean> }) {
   const [choosing, setChoosing] = useState(false);
-  return <div className="ending"><div className="burst">✦</div><Eyebrow>Chapter three, complete</Eyebrow><h1>Same time next year?</h1><p className="lede">Together, you collected <strong>{total(state)} love points</strong>, unlocked {state.achievements.length} little milestones, and made new memories to keep.</p><div className="contribution-card"><span>{content.couple.host}: {state.lovePoints.host}</span><Heart /><span>{content.couple.guest}: {state.lovePoints.guest}</span></div><a className="memory-lane-link" href={`/scrapbook?role=${role}`}>Let’s take a walk down memory lane where it all started <ArrowRight /></a>{state.keepsakes.length > 0 && <p className="keepsake-status">One of your evenings is safely kept.</p>}{role === "host" && !choosing && <Button variant="outline" onClick={() => setChoosing(true)}><RotateCcw />Replay our night</Button>}{role === "host" && choosing && <div className="replay-choice" role="dialog" aria-label="Choose replay mode"><strong>How should this evening live on?</strong><p>Start fresh, or save this shared score and your memory notes first.</p><Button className="gold-button" onClick={() => void act({ type: "restart", mode: "save" })}>Save our keepsake & replay</Button><Button variant="outline" onClick={() => void act({ type: "restart", mode: "fresh" })}>Start completely fresh</Button></div>}</div>;
+  return <div className="ending"><div className="burst">✦</div><Eyebrow>Chapter three, complete</Eyebrow><h1>Same time next year?</h1><p className="lede">Together, you collected <strong>{total(state)} love points</strong>, unlocked {state.achievements.length} little milestones, and made new memories to keep.</p><div className="contribution-card"><span>{content.couple.host}: {state.lovePoints.host}</span><Heart /><span>{content.couple.guest}: {state.lovePoints.guest}</span></div><div className="ending-actions"><Button variant="outline" onClick={() => downloadAnswers(state)}><Download />Download our answers</Button><a className="memory-lane-link" href={`/scrapbook?role=${role}`}>Let’s take a walk down memory lane where it all started <ArrowRight /></a><a className="home-link" href="/"><Home />Home</a></div>{state.keepsakes.length > 0 && <p className="keepsake-status">One of your evenings is safely kept.</p>}{role === "host" && !choosing && <Button variant="outline" onClick={() => setChoosing(true)}><RotateCcw />Replay our night</Button>}{role === "host" && choosing && <div className="replay-choice" role="dialog" aria-label="Choose replay mode"><strong>How should this evening live on?</strong><p>Start fresh, or save this shared score and your memory notes first.</p><Button className="gold-button" onClick={() => void act({ type: "restart", mode: "save" })}>Save our keepsake & replay</Button><Button variant="outline" onClick={() => void act({ type: "restart", mode: "fresh" })}>Start completely fresh</Button></div>}</div>;
 }
