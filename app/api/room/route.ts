@@ -7,14 +7,12 @@ import type { AchievementId, Role, RoomAction, RoomResponse, RoomState, Stage, S
 const TOKENS = { host: "rishabh-host-3years", guest: "glyra-guest-3years" } as const;
 const ROOM_ID = "anniversary";
 const stages: readonly Stage[] = ["lobby", "quiz", "draw", "memories", "finale", "ending"];
-const requests = new Map<string, { count: number; startedAt: number }>();
 
 function freshState(hostPresent = false, guestPresent = false, keepsakes: RoomState["keepsakes"] = []): RoomState {
   return { revision: 0, stage: "lobby", hostPresent, guestPresent, firstArrival: null, quizIndex: 0, answers: {}, matchedQuizAnswers: 0, drawRound: 0, drawer: "host", strokes: [], guesses: [], completedDrawRounds: 0, memoryIndex: 0, memoryNotes: {}, ready: { host: false, guest: false }, finaleUnlocked: false, lovePoints: { host: 0, guest: 0 }, achievements: [], surprises: { quiz: false, draw: false, memory: false }, keepsakes };
 }
 function auth(role: string | null, token: string | null): role is Role { return (role === "host" || role === "guest") && token === TOKENS[role]; }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value); }
-function rateLimited(key: string) { const now = Date.now(); const hit = requests.get(key); if (!hit || now - hit.startedAt > 60_000) { requests.set(key, { count: 1, startedAt: now }); return false; } hit.count += 1; return hit.count > 300; }
 function error(message: string, status: number, state?: RoomState) { return Response.json(state ? { error: message, state } : { error: message }, { status }); }
 function response(state: RoomState, role: Role, notice?: string): RoomResponse { const visible = structuredClone(state); for (const collection of [visible.answers, visible.memoryNotes]) { for (const pair of Object.values(collection)) { if (!pair.host || !pair.guest) delete pair[role === "host" ? "guest" : "host"]; } } return { state: visible, ...(state.finaleUnlocked ? { secret: { letter: content.letter, dates: content.futureDates } } : {}), ...(notice ? { notice } : {}) }; }
 function validStroke(stroke: unknown): stroke is Stroke { return isRecord(stroke) && typeof stroke.color === "string" && /^#[0-9a-f]{6}$/i.test(stroke.color) && Array.isArray(stroke.points) && stroke.points.length > 0 && stroke.points.length <= 1000 && stroke.points.every((point) => isRecord(point) && typeof point.x === "number" && Number.isFinite(point.x) && point.x >= 0 && point.x <= 1 && typeof point.y === "number" && Number.isFinite(point.y) && point.y >= 0 && point.y <= 1); }
@@ -65,13 +63,12 @@ function apply(state: RoomState, role: Role, action: RoomAction): string | null 
   return notices.join(" ") || null;
 }
 
-export async function GET(req: Request) { const url = new URL(req.url); const role = url.searchParams.get("role"); const token = url.searchParams.get("token"); if (!auth(role, token)) return error("This invitation link is not valid.", 401); if (rateLimited(`${role}:${token}`)) return error("Too many requests.", 429); return Response.json(response(await load(), role), { headers: { "cache-control": "no-store" } }); }
+export async function GET(req: Request) { const url = new URL(req.url); const role = url.searchParams.get("role"); const token = url.searchParams.get("token"); if (!auth(role, token)) return error("This invitation link is not valid.", 401); return Response.json(response(await load(), role), { headers: { "cache-control": "no-store" } }); }
 export async function POST(req: Request) {
   const body: unknown = await req.json().catch(() => null);
   if (!isRecord(body)) return error("Invalid request.", 400);
   const role = typeof body.role === "string" ? body.role : null;
   if (!auth(role, typeof body.token === "string" ? body.token : null)) return error("Not invited", 401);
-  if (rateLimited(role)) return error("Too many requests.", 429);
   const action = actionFrom(body.action);
   if (!action || !Number.isSafeInteger(body.expectedRevision)) return error("Invalid room action.", 400);
   await load();

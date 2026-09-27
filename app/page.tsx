@@ -94,7 +94,7 @@ export default function Home() {
     queue.current = result.catch(() => false);
     return result;
   }, [role, token, accept]);
-  useEffect(() => { const initial = setTimeout(refresh, 0); const poll = setInterval(refresh, state.stage === "draw" ? 900 : 2400); return () => { clearTimeout(initial); clearInterval(poll); }; }, [refresh, state.stage]);
+  useEffect(() => { const initial = setTimeout(refresh, 0); const poll = setInterval(refresh, state.stage === "draw" ? 1600 : 3500); return () => { clearTimeout(initial); clearInterval(poll); }; }, [refresh, state.stage]);
   useEffect(() => { stageRef.current?.focus(); const announce = setTimeout(() => setAnnouncement(`Now in ${labels[stages.indexOf(state.stage)]}.`), 0); return () => clearTimeout(announce); }, [state.stage]);
   const index = stages.indexOf(state.stage);
   if (!loading && !token) return <main className="loading"><Heart /><p>Choose how you’re joining tonight.</p><div className="invite-links"><a className="gold-button" href="/host">Open host invitation</a><a className="music-link" href="/guest">Open guest invitation</a></div></main>;
