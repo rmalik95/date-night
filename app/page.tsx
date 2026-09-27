@@ -56,8 +56,9 @@ export default function Home() {
   const [announcement, setAnnouncement] = useState("Welcome to your date night.");
   const stageRef = useRef<HTMLElement>(null);
   const latest = useRef(emptyState);
+  const lastAcceptedRevision = useRef(-1);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
-  const accept = useCallback((data: RoomResponse) => { if (data.state.revision < latest.current.revision) return; latest.current = data.state; setState(data.state); setSecret(data.secret); }, []);
+  const accept = useCallback((data: RoomResponse) => { if (data.state.revision <= lastAcceptedRevision.current) return; lastAcceptedRevision.current = data.state.revision; latest.current = data.state; setState(data.state); setSecret(data.secret); }, []);
   useEffect(() => { const resolveCredentials = setTimeout(() => setCredentials(credentials()), 0); return () => clearTimeout(resolveCredentials); }, []);
   const refresh = useCallback(async () => {
     if (!token) { setLoading(false); return; }
