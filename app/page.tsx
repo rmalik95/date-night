@@ -83,7 +83,7 @@ export default function Home() {
   useEffect(() => { const initial = setTimeout(refresh, 0); const poll = setInterval(refresh, state.stage === "draw" ? 900 : 2400); return () => { clearTimeout(initial); clearInterval(poll); }; }, [refresh, state.stage]);
   useEffect(() => { stageRef.current?.focus(); const announce = setTimeout(() => setAnnouncement(`Now in ${labels[stages.indexOf(state.stage)]}.`), 0); return () => clearTimeout(announce); }, [state.stage]);
   const index = stages.indexOf(state.stage);
-  if (!loading && !token) return <main className="loading"><Heart /><p>Open your host or guest invitation to join.</p><a href="/scrapbook">Visit our scrapbook</a></main>;
+  if (!loading && !token) return <main className="loading"><Heart /><p>Choose how you’re joining tonight.</p><div className="invite-links"><a className="gold-button" href="/host">Open host invitation</a><a className="music-link" href="/guest">Open guest invitation</a></div><a href="/scrapbook">Visit our scrapbook</a></main>;
   if (loading) return <main className="loading"><Sparkles /><p>Lighting the candles…</p></main>;
   if (!online && state.revision === 0) return <main className="loading"><WifiOff /><p>We couldn’t open your room. Check your invitation and connection.</p><Button onClick={() => void refresh()}>Try again</Button></main>;
   return <main className="app-shell romantic">

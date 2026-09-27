@@ -31,6 +31,7 @@
 .canvas-wrap{transform:none}
 canvas{height:auto;aspect-ratio:1000 / 620}
 .achievement-list{background:#20172c}
+.invite-links{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin:8px 0 18px}
 :where(button,a,input,textarea):focus-visible{outline:3px solid #f0b75e;outline-offset:4px}
 .stage-card:focus{outline:none}
 @media(max-width:480px){.topbar{flex-wrap:wrap;gap:14px}.topbar-tools{width:100%;justify-content:flex-end}.brand strong{font-size:17px}.achievement-toggle{font-size:12px!important}.guess-row input{min-width:0;width:100%}.scrapbook-intro h1{font-size:48px}}
